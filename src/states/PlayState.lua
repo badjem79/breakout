@@ -31,7 +31,7 @@ function PlayState:enter(params)
 
     self.level = params.level
 
-    self.recoverPoints = 5000 * params.level
+    self.recoverPoints = self.score + 5000 * params.level
 
     -- give ball random starting velocity
     self.balls[1].dx = math.random(-200, 200)
@@ -40,6 +40,8 @@ function PlayState:enter(params)
     self.powerUps = {}
 
     self.powerUpsRandomCounter = 0
+
+    self.enlargePoints = self.score + ENLARGE_POINTS
 end
 
 function PlayState:update(dt)
@@ -130,6 +132,11 @@ function PlayState:update(dt)
                     gSounds['recover']:play()
                 end
 
+                if self.score > self.enlargePoints then
+                    self.paddle:changeSize(1) -- +1 size
+                    self.enlargePoints = self.score + ENLARGE_POINTS
+                end
+
                 -- go to our victory screen if there are no more bricks left
                 if self:checkVictory() then
                     gSounds['victory']:play()
@@ -202,13 +209,13 @@ function PlayState:update(dt)
             if table.getn(self.balls) == 1 then
                 self.health = self.health - 1
                 gSounds['hurt']:play()
-
                 if self.health == 0 then
                     gStateMachine:change('game-over', {
                         score = self.score,
                         highScores = self.highScores
                     })
                 else
+                    self.paddle:changeSize(-1)
                     gStateMachine:change('serve', {
                         paddle = self.paddle,
                         bricks = self.bricks,
@@ -225,7 +232,7 @@ function PlayState:update(dt)
         end
     end
 
-    for i=#self.balls,1,-1 do
+    for i=#self.balls,1,-1 do -- remove old balls not in play any more
         if self.balls[i].inPlay == false then
             table.remove(self.balls, i)
         end
@@ -247,7 +254,7 @@ function PlayState:update(dt)
         end
     end
 
-    for i=#self.powerUps,1,-1 do
+    for i=#self.powerUps,1,-1 do  -- remove old powerUps not in play any more
         if self.powerUps[i].inPlay == false then
             table.remove(self.powerUps, i)
         end

@@ -72,56 +72,59 @@ function LevelMaker.createMap(level, lock)
         local solidTier = math.random(0, highestTier)
 
         for x = 1, numCols do
+            local mustSkip = false
             -- if skipping is turned on and we're on a skip iteration...
             if skipPattern and skipFlag then
                 -- turn skipping off for the next iteration
                 skipFlag = not skipFlag
 
-                -- Lua doesn't have a continue statement, so this is the workaround
-                goto continue
+                -- Lua doesn't have a continue statement, (continue is evil anyway...)
+                mustSkip = true
             else
                 -- flip the flag to true on an iteration we don't use it
                 skipFlag = not skipFlag
             end
 
-            b = Brick(
-                -- x-coordinate
-                (x-1)                   -- decrement x by 1 because tables are 1-indexed, coords are 0
-                * 32                    -- multiply by 32, the brick width
-                + 8                     -- the screen should have 8 pixels of padding; we can fit 13 cols + 16 pixels total
-                + (13 - numCols) * 16,  -- left-side padding for when there are fewer than 13 columns
+            if not mustSkip then
+
+                b = Brick(
+                    -- x-coordinate
+                    (x-1)                   -- decrement x by 1 because tables are 1-indexed, coords are 0
+                    * 32                    -- multiply by 32, the brick width
+                    + 8                     -- the screen should have 8 pixels of padding; we can fit 13 cols + 16 pixels total
+                    + (13 - numCols) * 16,  -- left-side padding for when there are fewer than 13 columns
+                    
+                    -- y-coordinate
+                    y * 16                  -- just use y * 16, since we need top padding anyway
+                )
+
+                -- if we're alternating, figure out which color/tier we're on
+                if alternatePattern and alternateFlag then
+                    b.color = alternateColor1
+                    b.tier = alternateTier1
+                    alternateFlag = not alternateFlag
+                else
+                    b.color = alternateColor2
+                    b.tier = alternateTier2
+                    alternateFlag = not alternateFlag
+                end
+
+                -- if not alternating and we made it here, use the solid color/tier
+                if not alternatePattern then
+                    b.color = solidColor
+                    b.tier = solidTier
+                end 
                 
-                -- y-coordinate
-                y * 16                  -- just use y * 16, since we need top padding anyway
-            )
+                --topmost and centerd brick must be lock
+                if (lock and y == 1 and x == math.ceil(numCols/2)) then
+                    lockAdded = true
+                    b.lock = true
+                    b.color = 1
+                    b.tier = 0
+                end
 
-            --topmost and centerd brick must be lock
-            if (lock and y == 1 and x == math.ceil(numCols/2)) then
-                lockAdded = true
-                b.lock = true
+                table.insert(bricks, b)
             end
-
-            -- if we're alternating, figure out which color/tier we're on
-            if alternatePattern and alternateFlag then
-                b.color = alternateColor1
-                b.tier = alternateTier1
-                alternateFlag = not alternateFlag
-            else
-                b.color = alternateColor2
-                b.tier = alternateTier2
-                alternateFlag = not alternateFlag
-            end
-
-            -- if not alternating and we made it here, use the solid color/tier
-            if not alternatePattern then
-                b.color = solidColor
-                b.tier = solidTier
-            end 
-
-            table.insert(bricks, b)
-
-            -- Lua's version of the 'continue' statement
-            ::continue::
         end
     end 
 

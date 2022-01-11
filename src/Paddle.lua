@@ -89,3 +89,15 @@ function Paddle:render()
         0)
     end
 end
+
+function Paddle:resetSize()
+    self.size = 2;
+    self.width = 64
+end
+
+function Paddle:changeSize(i)
+    if self.size + i > 0 and self.size + i < 5 then
+        self.size = self.size + i
+        self.width = 32 * self.size
+    end
+end

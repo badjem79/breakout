@@ -134,5 +134,5 @@ function GenerateQuadsBalls(atlas)
 end
 
 function isLockLevel(level)
-    return level==1 or level % 2 == 0
+    return level==1 or level % 3 == 0
 end
